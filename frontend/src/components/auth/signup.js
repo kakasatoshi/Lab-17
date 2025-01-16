@@ -1,107 +1,101 @@
 import React, { useState } from "react";
-import axios from "axios";
-import "../../css/forms.css";
-import useCsrfToken from "../../http/useCsrfToken";
+import { useNavigate } from "react-router-dom";
 
-const SignupForm = () => {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
+const Signup = ({ csrfToken }) => {
+  const [formData, setFormData] = useState({
+    email: "",
+    password: "",
+    confirmPassword: "",
+  });
   const [errorMessage, setErrorMessage] = useState("");
-  const { csrfToken, error } = useCsrfToken("http://localhost:5000/csrf-token"); // Nếu cần CSRF token
+  const [validationErrors, setValidationErrors] = useState({});
+  const navigate = useNavigate();
 
-  const handleSignup = async (event) => {
-    event.preventDefault();
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prevData) => ({
+      ...prevData,
+      [name]: value,
+    }));
+  };
 
-    if (email === "" || password === "" || confirmPassword === "") {
-      setErrorMessage("Vui lòng nhập đầy đủ thông tin");
+  const handleSubmit = (e) => {
+    e.preventDefault();
+
+    // Form validation (simplified for example)
+    if (formData.password !== formData.confirmPassword) {
+      setValidationErrors({ confirmPassword: "Passwords do not match" });
       return;
     }
 
-    // Kiểm tra mật khẩu xác nhận
-    if (password !== confirmPassword) {
-      setErrorMessage("Passwords do not match.");
-      return;
-    }
-
-    try {
-      const response = await axios.post(
-        "http://localhost:5000/auth/signup",
-        { email, password, confirmPassword },
-        {
-          headers: { "Content-Type": "application/json" },
+    fetch("/signup", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "CSRF-Token": csrfToken,
+      },
+      body: JSON.stringify(formData),
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        if (data.success) {
+          navigate("/login"); // Redirect to login after successful signup
+        } else {
+          setErrorMessage(data.message || "Something went wrong!");
         }
-      );
-      console.log("Signup successful:", response.data);
-      // Xử lý sau khi đăng ký thành công
-    } catch (error) {
-      if (error.response && error.response.data.message) {
-        setErrorMessage(error.response.data.message);
-      } else {
-        setErrorMessage("Something went wrong!");
-      }
-    }
+      })
+      .catch((error) => {
+        console.error("Error during signup:", error);
+        setErrorMessage("Something went wrong. Please try again.");
+      });
   };
 
   return (
-    <div>
-      {/* Head Section */}
-      <head>
-        <link rel="stylesheet" href="/css/forms.css" />
-        <link rel="stylesheet" href="/css/auth.css" />
-      </head>
-
-      {/* Navigation - Có thể đặt trong một Component khác */}
-      <nav>{/* Include Navigation Content */}</nav>
-
-      {/* Main Content */}
-      <main>
-        {errorMessage && (
-          <div className="user-message user-message--error">{errorMessage}</div>
-        )}
-        <form className="login-form" onSubmit={handleSignup}>
-          <div className="form-control">
-            <label htmlFor="email">E-Mail</label>
-            <input
-              type="email"
-              name="email"
-              id="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-            />
-          </div>
-          <div className="form-control">
-            <label htmlFor="password">Password</label>
-            <input
-              type="password"
-              name="password"
-              id="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-            />
-          </div>
-          <div className="form-control">
-            <label htmlFor="confirmPassword">Confirm Password</label>
-            <input
-              type="password"
-              name="confirmPassword"
-              id="confirmPassword"
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-            />
-          </div>
-          {/* Hidden CSRF Token */}
-          <input type="hidden" name="_csrf" value={csrfToken} />
-          <button className="btn" type="submit">
-            Signup
-          </button>
-        </form>
-      </main>
-
-      {/* Footer Section */}
-      <footer>{/* Include Footer Content */}</footer>
-    </div>
+    <main>
+      {errorMessage && (
+        <div className="user-message user-message--error">{errorMessage}</div>
+      )}
+      <form className="login-form" onSubmit={handleSubmit} noValidate>
+        <div className="form-control">
+          <label htmlFor="email">E-Mail</label>
+          <input
+            type="email"
+            name="email"
+            id="email"
+            value={formData.email}
+            onChange={handleInputChange}
+            className={validationErrors.email ? "invalid" : ""}
+          />
+        </div>
+        <div className="form-control">
+          <label htmlFor="password">Password</label>
+          <input
+            type="password"
+            name="password"
+            id="password"
+            value={formData.password}
+            onChange={handleInputChange}
+            className={validationErrors.password ? "invalid" : ""}
+          />
+        </div>
+        <div className="form-control">
+          <label htmlFor="confirmPassword">Confirm Password</label>
+          <input
+            type="password"
+            name="confirmPassword"
+            id="confirmPassword"
+            value={formData.confirmPassword}
+            onChange={handleInputChange}
+            className={validationErrors.confirmPassword ? "invalid" : ""}
+          />
+        </div>
+        <input type="hidden" name="_csrf" value={csrfToken} />
+        <button className="btn" type="submit">
+          Signup
+        </button>
+      </form>
+    </main>
   );
 };
 
-export default SignupForm;
+export default Signup;

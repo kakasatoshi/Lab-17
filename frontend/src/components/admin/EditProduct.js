@@ -1,70 +1,59 @@
-import React, { useState, useEffect } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
-import "../../css/forms.css";
-import useHttp from "../../http/useHttp";
+import React, { useState } from "react";
 
-function EditProduct() {
-  const { isLoading, error, sendRequest } = useHttp();
-  const location = useLocation();
-  const navigate = useNavigate();
-  const { editing, product } = location.state || {};
-  // console.log(product, editing, "edit product");
+const ProductForm = ({
+  csrfToken,
+  editing = false,
+  product = {},
+  validationErrors = [],
+  errorMessage = "",
+}) => {
+  const [title, setTitle] = useState(product.title || "");
+  const [price, setPrice] = useState(product.price || "");
+  const [description, setDescription] = useState(product.description || "");
+  const [image, setImage] = useState(null);
 
-  const [title, setTitle] = useState(editing ? product.title : "");
-  const [imageUrl, setImageUrl] = useState(editing ? product.imageUrl : "");
-  const [price, setPrice] = useState(editing ? product.price : "");
-  const [description, setDescription] = useState(
-    editing ? product.description : ""
-  );
-  const [csrfToken, setCsrfToken] = useState();
+  const handleSubmit = (event) => {
+    event.preventDefault();
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+    const formData = new FormData();
+    formData.append("title", title);
+    formData.append("price", price);
+    formData.append("description", description);
+    if (image) formData.append("image", image);
+    if (editing) formData.append("productId", product._id);
+    formData.append("_csrf", csrfToken);
 
-    const url = editing
-      ? `http://localhost:5000/admin/edit-product`
-      : "http://localhost:5000/admin/add-product";
+    const url = editing ? "/admin/edit-product" : "/admin/add-product";
 
-    const payload = {
-      productId: editing ? product._id : "",
-      title,
-      imageUrl,
-      price: parseFloat(price),
-      description,
-      // createdAt: "",
-      // updatedAt: "",
-    };
-
-    const requestConfig = {
-      url,
-      method: editing ? "POST" : "POST",
-      headers: { "Content-Type": "application/json", "CSRF-Token": csrfToken },
-      body: payload,
-    };
-
-    try {
-      await sendRequest(requestConfig);
-      navigate("/admin/ProductList"); // Redirect to product list on success
-    } catch (error) {
-      console.error("Error submitting form", error);
-    }
-  };
-
-  useEffect(() => {
-    fetch("http://localhost:5000/csrf-token", { credentials: "include" })
+    fetch(url, {
+      method: "POST",
+      body: formData,
+    })
       .then((response) => response.json())
       .then((data) => {
-        setCsrfToken(data.csrfToken); // Lưu token trong state
+        console.log("Success:", data);
       })
-      .catch((error) => console.error("CSRF token fetch error:", error));
-  }, []);
+      .catch((error) => {
+        console.error("Error:", error);
+      });
+  };
 
   return (
     <main>
-      <form className="product-form" onSubmit={handleSubmit}>
+      {errorMessage && (
+        <div className="user-message user-message--error">{errorMessage}</div>
+      )}
+      <form
+        className="product-form"
+        onSubmit={handleSubmit}
+        encType="multipart/form-data"
+      >
         <div className="form-control">
           <label htmlFor="title">Title</label>
           <input
+            className={
+              validationErrors.some((e) => e.param === "title") ? "invalid" : ""
+            }
             type="text"
             name="title"
             id="title"
@@ -72,21 +61,21 @@ function EditProduct() {
             onChange={(e) => setTitle(e.target.value)}
           />
         </div>
-
         <div className="form-control">
-          <label htmlFor="imageUrl">Image URL</label>
+          <label htmlFor="image">Image</label>
           <input
-            type="text"
-            name="imageUrl"
-            id="imageUrl"
-            value={imageUrl}
-            onChange={(e) => setImageUrl(e.target.value)}
+            type="file"
+            name="image"
+            id="image"
+            onChange={(e) => setImage(e.target.files[0])}
           />
         </div>
-
         <div className="form-control">
           <label htmlFor="price">Price</label>
           <input
+            className={
+              validationErrors.some((e) => e.param === "price") ? "invalid" : ""
+            }
             type="number"
             name="price"
             id="price"
@@ -95,25 +84,31 @@ function EditProduct() {
             onChange={(e) => setPrice(e.target.value)}
           />
         </div>
-
         <div className="form-control">
           <label htmlFor="description">Description</label>
           <textarea
+            className={
+              validationErrors.some((e) => e.param === "description")
+                ? "invalid"
+                : ""
+            }
             name="description"
             id="description"
             rows="5"
             value={description}
             onChange={(e) => setDescription(e.target.value)}
-          />
+          ></textarea>
         </div>
-
-        <button className="btn" type="submit" disabled={isLoading}>
+        {editing && (
+          <input type="hidden" name="productId" value={product._id} />
+        )}
+        <input type="hidden" name="_csrf" value={csrfToken} />
+        <button className="btn" type="submit">
           {editing ? "Update Product" : "Add Product"}
         </button>
       </form>
-      {error && <p className="error-text">Something went wrong: {error}</p>}
     </main>
   );
-}
+};
 
-export default EditProduct;
+export default ProductForm;

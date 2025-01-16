@@ -11,6 +11,7 @@ import {
 } from "react-router-dom";
 import axios from "axios";
 import useCsrfToken from "../http/useCsrfToken";
+import End from "../components/includes/End";
 
 const Layout = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -47,7 +48,7 @@ const Layout = () => {
       <div className={css.layout}>
         <Outlet csrfToken={csrfToken} />
       </div>
-
+      <End />
       <footer>Footer</footer>
     </div>
   );

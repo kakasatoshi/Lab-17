@@ -1,15 +1,36 @@
+const mongoose = require("mongoose");
+const fileHelper = require("../util/file");
+const { validationResult } = require("express-validator");
+
 const Product = require("../models/product");
 
-exports.getAddProduct = (req, res, next) => {
-  res.json({
-    message: "Add Product Page",
-    pageTitle: "Add Product",
-    path: "/admin/add-product",
-  });
-};
-
+// Add a product
 exports.postAddProduct = (req, res, next) => {
-  const { title, imageUrl, price, description } = req.body;
+  const title = req.body.title;
+  const image = req.file;
+  const price = req.body.price;
+  const description = req.body.description;
+
+  if (!image) {
+    return res.status(422).json({
+      message: "Attached file is not an image.",
+      product: { title, price, description },
+      validationErrors: [],
+    });
+  }
+
+  const errors = validationResult(req);
+
+  if (!errors.isEmpty()) {
+    return res.status(422).json({
+      message: errors.array()[0].msg,
+      product: { title, price, description },
+      validationErrors: errors.array(),
+    });
+  }
+
+  const imageUrl = image.path;
+
   const product = new Product({
     title,
     price,
@@ -20,85 +41,99 @@ exports.postAddProduct = (req, res, next) => {
 
   product
     .save()
-    .then((result) => {
-      console.log("Created Product");
-      res.status(201).json({
-        message: "Product created successfully",
-        product: result,
-      });
+    .then(() => {
+      res
+        .status(201)
+        .json({ message: "Product created successfully!", product });
     })
     .catch((err) => {
-      console.log(err);
-      res.status(500).json({ message: "Creating product failed" });
+      res.status(500).json({ message: "Creating product failed.", error: err });
     });
 };
 
-exports.getEditProduct = (req, res, next) => {
-  const prodId = req.params.productId;
+// Edit a product
+exports.postEditProduct = (req, res, next) => {
+  const prodId = req.body.productId;
+  const updatedTitle = req.body.title;
+  const updatedPrice = req.body.price;
+  const image = req.file;
+  const updatedDesc = req.body.description;
+
+  const errors = validationResult(req);
+
+  if (!errors.isEmpty()) {
+    return res.status(422).json({
+      message: errors.array()[0].msg,
+      product: {
+        title: updatedTitle,
+        price: updatedPrice,
+        description: updatedDesc,
+        _id: prodId,
+      },
+      validationErrors: errors.array(),
+    });
+  }
 
   Product.findById(prodId)
     .then((product) => {
       if (!product) {
-        return res.status(404).json({ message: "Product not found" });
+        return res.status(404).json({ message: "Product not found." });
       }
-      res.json({ product });
-    })
-    .catch((err) => {
-      console.log(err);
-      res.status(500).json({ message: "Fetching product failed" });
-    });
-};
-
-exports.postEditProduct = (req, res, next) => {
-  const { productId, title, price, imageUrl, description } = req.body;
-
-  Product.findById(productId)
-    .then((product) => {
-      if (!product) {
-        return res.status(404).json({ message: "Product not found" });
+      if (product.userId.toString() !== req.user._id.toString()) {
+        return res.status(403).json({ message: "Unauthorized." });
       }
-      product.title = title;
-      product.price = price;
-      product.imageUrl = imageUrl;
-      product.description = description;
+
+      product.title = updatedTitle;
+      product.price = updatedPrice;
+      product.description = updatedDesc;
+
+      if (image) {
+        fileHelper.deleteFile(product.imageUrl);
+        product.imageUrl = image.path;
+      }
 
       return product.save();
     })
     .then((result) => {
-      console.log("UPDATED PRODUCT!");
-      res.json({
-        message: "Product updated successfully",
-        product: result,
-      });
+      res
+        .status(200)
+        .json({ message: "Product updated successfully!", product: result });
     })
     .catch((err) => {
-      console.log(err);
-      res.status(500).json({ message: "Updating product failed" });
+      res.status(500).json({ message: "Updating product failed.", error: err });
     });
 };
 
+// Get all products for the admin
 exports.getProducts = (req, res, next) => {
-  Product.find()
+  Product.find({ userId: req.user._id })
     .then((products) => {
-      res.json({ products });
+      res.status(200).json({ products });
     })
     .catch((err) => {
-      console.log(err);
-      res.status(500).json({ message: "Fetching products failed" });
+      res
+        .status(500)
+        .json({ message: "Fetching products failed.", error: err });
     });
 };
 
+// Delete a product
 exports.postDeleteProduct = (req, res, next) => {
   const prodId = req.body.productId;
-  console.log("Product deleted, prodId: " + prodId);
 
-  Product.findByIdAndDelete(prodId)
+  Product.findById(prodId)
+    .then((product) => {
+      if (!product) {
+        return res.status(404).json({ message: "Product not found." });
+      }
+
+      fileHelper.deleteFile(product.imageUrl);
+      return Product.deleteOne({ _id: prodId, userId: req.user._id });
+    })
     .then(() => {
-      console.log("DESTROYED PRODUCT");
-      res.json({ message: "Product deleted successfully" });
+      res.status(200).json({ message: "Product deleted successfully!" });
     })
     .catch((err) => {
-      console.log(err);
-      res.status(500).json({ message: "Deleting product failed" });
+      res.status(500).json({ message: "Deleting product failed.", error: err });
     });
 };
