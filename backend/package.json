@@ -15,16 +15,23 @@
     "bcryptjs": "^2.4.3",
     "body-parser": "^1.20.3",
     "connect-flash": "^0.1.1",
+    "connect-mongo": "^5.1.0",
     "connect-mongodb-session": "^5.0.0",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
     "csurf": "^1.10.0",
     "express": "^4.21.1",
     "express-session": "^1.18.1",
+    "express-validator": "^7.2.1",
     "mongodb": "^6.12.0",
     "mongoose": "^8.9.3",
+    "multer": "^1.4.5-lts.1",
     "mysql2": "^3.11.5",
+    "nodemailer": "^6.9.16",
+    "nodemailer-sendgrid-transport": "^0.2.0",
     "nodemon": "^3.1.7",
-    "sequelize": "^6.37.5"
+    "punycode": "^2.3.1",
+    "sequelize": "^6.37.5",
+    "tough-cookie": "^5.1.0"
   }
 }

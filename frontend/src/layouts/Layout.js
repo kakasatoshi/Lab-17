@@ -1,5 +1,5 @@
 import { Outlet } from "react-router-dom";
-import Navbar from "../components/includes/Mynavbar";
+// import Navbar from "../components/includes/Mynavbar";
 import css from "./layOut.module.css";
 import Header from "../components/includes/Header";
 import React, { useState, useEffect } from "react";
