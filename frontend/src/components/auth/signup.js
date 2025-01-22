@@ -1,101 +1,71 @@
-import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useState } from 'react';
 
-const Signup = ({ csrfToken }) => {
-  const [formData, setFormData] = useState({
-    email: "",
-    password: "",
-    confirmPassword: "",
-  });
-  const [errorMessage, setErrorMessage] = useState("");
-  const [validationErrors, setValidationErrors] = useState({});
-  const navigate = useNavigate();
+function SignupForm({ errorMessage, validationErrors, csrfToken, oldInput }) {
+    const [formData, setFormData] = useState({
+        email: oldInput?.email || '',
+        password: oldInput?.password || '',
+        confirmPassword: oldInput?.confirmPassword || ''
+    });
 
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prevData) => ({
-      ...prevData,
-      [name]: value,
-    }));
-  };
+    const handleChange = (e) => {
+        const { name, value } = e.target;
+        setFormData((prevData) => ({
+            ...prevData,
+            [name]: value
+        }));
+    };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
+    const handleSubmit = (e) => {
+        e.preventDefault();
+        // Handle form submission logic here (e.g., send data to API)
+    };
 
-    // Form validation (simplified for example)
-    if (formData.password !== formData.confirmPassword) {
-      setValidationErrors({ confirmPassword: "Passwords do not match" });
-      return;
-    }
+    const getInputClass = (field) => {
+        return validationErrors?.some(error => error.param === field) ? 'invalid' : '';
+    };
 
-    fetch("/signup", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "CSRF-Token": csrfToken,
-      },
-      body: JSON.stringify(formData),
-    })
-      .then((response) => response.json())
-      .then((data) => {
-        if (data.success) {
-          navigate("/login"); // Redirect to login after successful signup
-        } else {
-          setErrorMessage(data.message || "Something went wrong!");
-        }
-      })
-      .catch((error) => {
-        console.error("Error during signup:", error);
-        setErrorMessage("Something went wrong. Please try again.");
-      });
-  };
-
-  return (
-    <main>
-      {errorMessage && (
-        <div className="user-message user-message--error">{errorMessage}</div>
-      )}
-      <form className="login-form" onSubmit={handleSubmit} noValidate>
-        <div className="form-control">
-          <label htmlFor="email">E-Mail</label>
-          <input
-            type="email"
-            name="email"
-            id="email"
-            value={formData.email}
-            onChange={handleInputChange}
-            className={validationErrors.email ? "invalid" : ""}
-          />
+    return (
+        <div>
+            {errorMessage && <div className="user-message user-message--error">{errorMessage}</div>}
+            <form className="login-form" onSubmit={handleSubmit} noValidate>
+                <div className="form-control">
+                    <label htmlFor="email">E-Mail</label>
+                    <input
+                        className={getInputClass('email')}
+                        type="email"
+                        name="email"
+                        id="email"
+                        value={formData.email}
+                        onChange={handleChange}
+                    />
+                </div>
+                <div className="form-control">
+                    <label htmlFor="password">Password</label>
+                    <input
+                        className={getInputClass('password')}
+                        type="password"
+                        name="password"
+                        id="password"
+                        value={formData.password}
+                        onChange={handleChange}
+                    />
+                </div>
+                <div className="form-control">
+                    <label htmlFor="confirmPassword">Confirm Password</label>
+                    <input
+                        className={getInputClass('confirmPassword')}
+                        type="password"
+                        name="confirmPassword"
+                        id="confirmPassword"
+                        value={formData.confirmPassword}
+                        onChange={handleChange}
+                    />
+                </div>
+                <input type="hidden" name="_csrf" value={csrfToken} />
+                <button className="btn" type="submit">Signup</button>
+            </form>
         </div>
-        <div className="form-control">
-          <label htmlFor="password">Password</label>
-          <input
-            type="password"
-            name="password"
-            id="password"
-            value={formData.password}
-            onChange={handleInputChange}
-            className={validationErrors.password ? "invalid" : ""}
-          />
-        </div>
-        <div className="form-control">
-          <label htmlFor="confirmPassword">Confirm Password</label>
-          <input
-            type="password"
-            name="confirmPassword"
-            id="confirmPassword"
-            value={formData.confirmPassword}
-            onChange={handleInputChange}
-            className={validationErrors.confirmPassword ? "invalid" : ""}
-          />
-        </div>
-        <input type="hidden" name="_csrf" value={csrfToken} />
-        <button className="btn" type="submit">
-          Signup
-        </button>
-      </form>
-    </main>
-  );
-};
+    );
+}
 
-export default Signup;
+export default SignupForm;

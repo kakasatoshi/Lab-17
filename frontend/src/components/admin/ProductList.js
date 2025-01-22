@@ -1,67 +1,62 @@
-import React from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useState, useEffect } from 'react';
+import ProductForm from './ProductForm';
 
-const ProductList = ({ products, csrfToken, onDelete }) => {
-  const navigate = useNavigate();
+const ProductPage = ({ productId, editing }) => {
+    const [product, setProduct] = useState(null);
+    const [errorMessage, setErrorMessage] = useState('');
+    const [validationErrors, setValidationErrors] = useState([]);
+    const csrfToken = 'your_csrf_token';  // Get this from your backend or context
 
-  const handleDelete = (productId) => {
-    fetch("/admin/delete-product", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "CSRF-Token": csrfToken,
-      },
-      body: JSON.stringify({ productId }),
-    })
-      .then((response) => {
-        if (response.ok) {
-          onDelete(productId); // Cập nhật danh sách sản phẩm sau khi xóa
-        } else {
-          throw new Error("Failed to delete product");
+    useEffect(() => {
+        if (editing) {
+            // Fetch product details if editing
+            fetch(`/api/products/${productId}`)
+                .then(res => res.json())
+                .then(data => setProduct(data.product))
+                .catch(err => setErrorMessage('Error loading product.'));
         }
-      })
-      .catch((error) => {
-        console.error("Error deleting product:", error);
-      });
-  };
+    }, [editing, productId]);
 
-  if (products.length === 0) {
-    return <h1>No Products Found!</h1>;
-  }
+    const handleSubmit = (formData) => {
+        const formDataToSend = new FormData();
+        for (const key in formData) {
+            formDataToSend.append(key, formData[key]);
+        }
 
-  return (
-    <main>
-      <div className="grid">
-        {products.map((product) => (
-          <article className="card product-item" key={product._id}>
-            <header className="card__header">
-              <h1 className="product__title">{product.title}</h1>
-            </header>
-            <div className="card__image">
-              <img src={`/${product.imageUrl}`} alt={product.title} />
-            </div>
-            <div className="card__content">
-              <h2 className="product__price">${product.price}</h2>
-              <p className="product__description">{product.description}</p>
-            </div>
-            <div className="card__actions">
-              <button
-                className="btn"
-                onClick={() =>
-                  navigate(`/admin/edit-product/${product._id}?edit=true`)
-                }
-              >
-                Edit
-              </button>
-              <button className="btn" onClick={() => handleDelete(product._id)}>
-                Delete
-              </button>
-            </div>
-          </article>
-        ))}
-      </div>
-    </main>
-  );
+        const url = editing ? '/admin/edit-product' : '/admin/add-product';
+
+        fetch(url, {
+            method: 'POST',
+            body: formDataToSend,
+            headers: {
+                'CSRF-Token': csrfToken,
+            }
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.errors) {
+                setValidationErrors(data.errors);
+            } else {
+                // Redirect or update UI on success
+            }
+        })
+        .catch(err => setErrorMessage('Error submitting form.'));
+    };
+
+    return (
+        <div>
+            {product && (
+                <ProductForm 
+                    product={product}
+                    editing={editing}
+                    errorMessage={errorMessage}
+                    validationErrors={validationErrors}
+                    csrfToken={csrfToken}
+                    onSubmit={handleSubmit}
+                />
+            )}
+        </div>
+    );
 };
 
-export default ProductList;
+export default ProductPage;

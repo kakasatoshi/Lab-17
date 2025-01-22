@@ -1,75 +1,37 @@
-import React, { useState } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import React, { useState } from 'react';
 
-const NewPassword = ({ csrfToken }) => {
-  const [password, setPassword] = useState("");
-  const [errorMessage, setErrorMessage] = useState("");
-  const [userId, setUserId] = useState("");
-  const [passwordToken, setPasswordToken] = useState("");
-  const navigate = useNavigate();
-  const location = useLocation();
+const ResetPasswordForm = ({ userId, passwordToken, csrfToken }) => {
+    const [password, setPassword] = useState('');
 
-  // Lấy userId và passwordToken từ query params hoặc props
-  React.useEffect(() => {
-    const params = new URLSearchParams(location.search);
-    setUserId(params.get("userId"));
-    setPasswordToken(params.get("passwordToken"));
-  }, [location]);
+    const handleChange = (e) => {
+        setPassword(e.target.value);
+    };
 
-  const handleSubmit = (event) => {
-    event.preventDefault();
+    const handleSubmit = (e) => {
+        e.preventDefault();
+        // Submit form logic here
+    };
 
-    fetch("/new-password", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "CSRF-Token": csrfToken,
-      },
-      body: JSON.stringify({
-        password,
-        userId,
-        passwordToken,
-      }),
-    })
-      .then((response) => response.json())
-      .then((data) => {
-        if (data.success) {
-          navigate("/login"); // Điều hướng về trang đăng nhập sau khi cập nhật mật khẩu thành công
-        } else {
-          setErrorMessage(data.message || "Something went wrong!");
-        }
-      })
-      .catch((error) => {
-        console.error("Error updating password:", error);
-        setErrorMessage("Something went wrong. Please try again.");
-      });
-  };
-
-  return (
-    <main>
-      {errorMessage && (
-        <div className="user-message user-message--error">{errorMessage}</div>
-      )}
-      <form className="login-form" onSubmit={handleSubmit}>
-        <div className="form-control">
-          <label htmlFor="password">Password</label>
-          <input
-            type="password"
-            name="password"
-            id="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-          />
+    return (
+        <div>
+            <form className="login-form" onSubmit={handleSubmit}>
+                <div className="form-control">
+                    <label htmlFor="password">Password</label>
+                    <input 
+                        type="password" 
+                        name="password" 
+                        id="password" 
+                        value={password}
+                        onChange={handleChange}
+                    />
+                </div>
+                <input type="hidden" name="userId" value={userId} />
+                <input type="hidden" name="passwordToken" value={passwordToken} />
+                <input type="hidden" name="_csrf" value={csrfToken} />
+                <button className="btn" type="submit">Update Password</button>
+            </form>
         </div>
-        <input type="hidden" name="userId" value={userId} />
-        <input type="hidden" name="passwordToken" value={passwordToken} />
-        <input type="hidden" name="_csrf" value={csrfToken} />
-        <button className="btn" type="submit">
-          Update Password
-        </button>
-      </form>
-    </main>
-  );
+    );
 };
 
-export default NewPassword;
+export default ResetPasswordForm;

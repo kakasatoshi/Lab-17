@@ -2,157 +2,229 @@ const Product = require("../models/product");
 const Order = require("../models/order");
 
 exports.getProducts = (req, res, next) => {
+  const page = +req.query.page || 1;
+  let totalItems;
+
   Product.find()
-    .then((products) => {
-      res.status(200).json({ status: "success", data: { products } });
+    .countDocuments()
+    .then(numProducts => {
+      totalItems = numProducts;
+      return Product.find()
+        .skip((page - 1) * ITEMS_PER_PAGE)
+        .limit(ITEMS_PER_PAGE);
     })
-    .catch((err) => {
-      console.error(err);
-      res
-        .status(500)
-        .json({ status: "error", message: "Fetching products failed." });
+    .then(products => {
+      res.status(200).json({
+        products: products,
+        currentPage: page,
+        hasNextPage: ITEMS_PER_PAGE * page < totalItems,
+        hasPreviousPage: page > 1,
+        nextPage: page + 1,
+        previousPage: page - 1,
+        lastPage: Math.ceil(totalItems / ITEMS_PER_PAGE)
+      });
+    })
+    .catch(err => {
+      const error = new Error(err);
+      error.httpStatusCode = 500;
+      return next(error);
     });
 };
+
+
 
 exports.getProduct = (req, res, next) => {
   const prodId = req.params.productId;
   Product.findById(prodId)
-    .then((product) => {
+    .then(product => {
       if (!product) {
-        return res
-          .status(404)
-          .json({ status: "error", message: "Product not found." });
+        return res.status(404).json({ message: 'Product not found' });
       }
-      res.status(200).json({ status: "success", data: { product } });
+      res.status(200).json({ product: product });
     })
-    .catch((err) => {
-      console.error(err);
-      res
-        .status(500)
-        .json({ status: "error", message: "Fetching product failed." });
+    .catch(err => {
+      const error = new Error(err);
+      error.httpStatusCode = 500;
+      return next(error);
     });
 };
 
+
+
+
 exports.getIndex = (req, res, next) => {
+  const page = +req.query.page || 1;
+  let totalItems;
+
   Product.find()
-    .then((products) => {
-      res.status(200).json({ status: "success", data: { products } });
+    .countDocuments()
+    .then(numProducts => {
+      totalItems = numProducts;
+      return Product.find()
+        .skip((page - 1) * ITEMS_PER_PAGE)
+        .limit(ITEMS_PER_PAGE);
     })
-    .catch((err) => {
-      console.error(err);
-      res
-        .status(500)
-        .json({ status: "error", message: "Fetching products failed." });
+    .then(products => {
+      res.status(200).json({
+        products: products,
+        currentPage: page,
+        hasNextPage: ITEMS_PER_PAGE * page < totalItems,
+        hasPreviousPage: page > 1,
+        nextPage: page + 1,
+        previousPage: page - 1,
+        lastPage: Math.ceil(totalItems / ITEMS_PER_PAGE)
+      });
+    })
+    .catch(err => {
+      const error = new Error(err);
+      error.httpStatusCode = 500;
+      return next(error);
     });
 };
+
 
 exports.getCart = (req, res, next) => {
   req.user
-    .populate("cart.items.productId")
-    .then((user) => {
-      const products = user.cart.items.map((item) => ({
-        product: item.productId,
-        quantity: item.quantity,
-      }));
-      res.status(200).json({ status: "success", data: { products } });
+    .populate('cart.items.productId')
+    .execPopulate()
+    .then(user => {
+      const products = user.cart.items;
+      res.status(200).json({ products: products });
     })
-    .catch((err) => {
-      console.error(err);
-      res
-        .status(500)
-        .json({ status: "error", message: "Fetching cart failed." });
+    .catch(err => {
+      const error = new Error(err);
+      error.httpStatusCode = 500;
+      return next(error);
     });
 };
+
+
 
 exports.postCart = (req, res, next) => {
   const prodId = req.body.productId;
   Product.findById(prodId)
-    .then((product) => {
-      if (!product) {
-        return res
-          .status(404)
-          .json({ status: "error", message: "Product not found." });
-      }
+    .then(product => {
       return req.user.addToCart(product);
     })
-    .then((result) => {
-      res
-        .status(200)
-        .json({
-          status: "success",
-          message: "Product added to cart.",
-          data: result,
-        });
+    .then(result => {
+      res.status(200).json({
+        message: 'Product added to cart',
+        cart: result
+      });
     })
-    .catch((err) => {
-      console.error(err);
-      res
-        .status(500)
-        .json({ status: "error", message: "Adding to cart failed." });
+    .catch(err => {
+      const error = new Error(err);
+      error.httpStatusCode = 500;
+      return next(error);
     });
 };
+
 
 exports.postCartDeleteProduct = (req, res, next) => {
   const prodId = req.body.productId;
   req.user
     .removeFromCart(prodId)
-    .then((result) => {
-      res
-        .status(200)
-        .json({
-          status: "success",
-          message: "Product removed from cart.",
-          data: result,
-        });
+    .then(result => {
+      res.status(200).json({ message: 'Product removed from cart' });
     })
-    .catch((err) => {
-      console.error(err);
-      res
-        .status(500)
-        .json({ status: "error", message: "Removing from cart failed." });
+    .catch(err => {
+      const error = new Error(err);
+      error.httpStatusCode = 500;
+      return next(error);
     });
 };
 
+
 exports.postOrder = (req, res, next) => {
   req.user
-    .populate("cart.items.productId")
-    .then((user) => {
-      const products = user.cart.items.map((i) => ({
-        quantity: i.quantity,
-        product: { ...i.productId._doc },
-      }));
+    .populate('cart.items.productId')
+    .execPopulate()
+    .then(user => {
+      const products = user.cart.items.map(i => {
+        return { quantity: i.quantity, product: { ...i.productId._doc } };
+      });
       const order = new Order({
         user: {
-          name: req.user.name,
-          userId: req.user,
+          email: req.user.email,
+          userId: req.user
         },
-        products,
+        products: products
       });
       return order.save();
     })
-    .then(() => req.user.clearCart())
-    .then(() => {
-      res
-        .status(201)
-        .json({ status: "success", message: "Order placed successfully." });
+    .then(result => {
+      return req.user.clearCart();
     })
-    .catch((err) => {
-      console.error(err);
-      res
-        .status(500)
-        .json({ status: "error", message: "Placing order failed." });
+    .then(() => {
+      res.status(201).json({
+        message: 'Order placed successfully',
+        order: result
+      });
+    })
+    .catch(err => {
+      const error = new Error(err);
+      error.httpStatusCode = 500;
+      return next(error);
     });
 };
 
 exports.getOrders = (req, res, next) => {
-  Order.find({ "user.userId": req.user._id })
-    .then((orders) => {
-      res.status(200).json({ status: "success", data: { orders } });
+  Order.find({ 'user.userId': req.user._id })
+    .then(orders => {
+      res.status(200).json({ orders: orders });
     })
-    .catch((err) => {
-      console.error(err);
-      res
-        .status(500)
-        .json({ status: "error", message: "Fetching orders failed." });
+    .catch(err => {
+      const error = new Error(err);
+      error.httpStatusCode = 500;
+      return next(error);
     });
 };
+
+exports.getInvoice = (req, res, next) => {
+  const orderId = req.params.orderId;
+  Order.findById(orderId)
+    .then(order => {
+      if (!order) {
+        return next(new Error('No order found.'));
+      }
+      if (order.user.userId.toString() !== req.user._id.toString()) {
+        return next(new Error('Unauthorized'));
+      }
+      const invoiceName = 'invoice-' + orderId + '.pdf';
+      const invoicePath = path.join('data', 'invoices', invoiceName);
+
+      const pdfDoc = new PDFDocument();
+      res.setHeader('Content-Type', 'application/pdf');
+      res.setHeader(
+        'Content-Disposition',
+        'inline; filename="' + invoiceName + '"'
+      );
+      pdfDoc.pipe(fs.createWriteStream(invoicePath));
+      pdfDoc.pipe(res);
+
+      pdfDoc.fontSize(26).text('Invoice', {
+        underline: true
+      });
+      pdfDoc.text('-----------------------');
+      let totalPrice = 0;
+      order.products.forEach(prod => {
+        totalPrice += prod.quantity * prod.product.price;
+        pdfDoc
+          .fontSize(14)
+          .text(
+            prod.product.title +
+              ' - ' +
+              prod.quantity +
+              ' x ' +
+              '$' +
+              prod.product.price
+          );
+      });
+      pdfDoc.text('---');
+      pdfDoc.fontSize(20).text('Total Price: $' + totalPrice);
+
+      pdfDoc.end();
+    })
+    .catch(err => next(err));
+};
+
