@@ -23,7 +23,9 @@ const ProductForm = ({
     if (editing) formData.append("productId", product._id);
     formData.append("_csrf", csrfToken);
 
-    const url = editing ? "/admin/edit-product" : "/admin/add-product";
+    const url = editing
+      ? `http://localhost:5000/admin/edit-product`
+      : "http://localhost:5000/admin/add-product";
 
     fetch(url, {
       method: "POST",
