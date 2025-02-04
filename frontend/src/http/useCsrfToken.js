@@ -1,14 +1,14 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
 
-const useCsrfToken = (csrfEndpoint) => {
+const useCsrfToken = () => {
   const [csrfToken, setCsrfToken] = useState("");
   const [error, setError] = useState(null);
 
   useEffect(() => {
     const fetchCsrfToken = async () => {
       try {
-        const response = await axios.get(csrfEndpoint, {
+        const response = await axios.get("http://localhost:5000/csrf-token", {
           withCredentials: true,
         });
         setCsrfToken(response.data.csrfToken);
@@ -19,7 +19,7 @@ const useCsrfToken = (csrfEndpoint) => {
     };
 
     fetchCsrfToken();
-  }, [csrfEndpoint]);
+  }, []);
 
   return { csrfToken, error };
 };

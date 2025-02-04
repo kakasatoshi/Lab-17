@@ -12,6 +12,9 @@ const User = require("./models/user");
 const adminRoutes = require("./routes/admin");
 const shopRoutes = require("./routes/shop");
 const authRoutes = require("./routes/auth");
+const cors = require("cors");
+
+
 
 const MONGODB_URI =
   "mongodb+srv://kakasatoshi:Mnbv%400987@product.6wlp4.mongodb.net/Product?retryWrites=true&w=majority&appName=Product";
@@ -19,6 +22,7 @@ const MONGODB_URI =
 const app = express();
 const store = new MongoDBStore({ uri: MONGODB_URI, collection: "sessions" });
 const csrfProtection = csrf();
+app.use(cors({ origin: "http://localhost:3000", credentials: true }));
 
 const fileStorage = multer.diskStorage({
   destination: (req, file, cb) => cb(null, "images"),
@@ -75,7 +79,7 @@ app.get("/csrf-token", (req, res) => {
 
 // Routes
 app.use("/admin", adminRoutes);
-app.use(shopRoutes);
+app.use("/shop", shopRoutes);
 app.use(authRoutes);
 
 // Serve React App

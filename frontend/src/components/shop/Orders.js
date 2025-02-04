@@ -7,7 +7,7 @@ const Orders = () => {
   const { isLoading, error, sendRequest } = useHttp();
   const [orders, setOrders] = useState([]);
   const { csrfToken, error2 } = useCsrfToken(
-    "http://localhost:5000/csrf-token"
+   
   );
 
   const applyData = (data) => {

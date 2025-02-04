@@ -15,7 +15,7 @@ import End from "../components/includes/End";
 
 const Layout = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const { csrfToken, error } = useCsrfToken("http://localhost:5000/csrf-token");
+  const { csrfToken, error } = useCsrfToken();
 
   // Xác định trạng thái đăng nhập (giả định lấy từ API hoặc context)
   useEffect(() => {

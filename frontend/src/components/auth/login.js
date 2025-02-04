@@ -1,4 +1,6 @@
 import React, { useState } from "react";
+import "../../css/auth.css";
+import axios from "axios";
 
 const LoginForm = ({
   errorMessage = "",
@@ -10,7 +12,10 @@ const LoginForm = ({
     email: oldInput.email || "",
     password: oldInput.password || "",
   });
+  const { email, password } = formData;
+  const [error, setError] = useState(false);
 
+  const [confirmPassword, setConfirmPassword] = useState("");
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prevData) => ({
@@ -22,13 +27,13 @@ const LoginForm = ({
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (email === "" || password === "" || confirmPassword === "") {
-      setErrorMessage("Vui lòng nhập đầy đủ thông tin");
+      setError("Vui lòng nhập đầy đủ thông tin");
       return;
     }
 
     // Kiểm tra mật khẩu xác nhận
     if (password !== confirmPassword) {
-      setErrorMessage("Passwords do not match.");
+      setError("Passwords do not match.");
       return;
     }
 
@@ -44,9 +49,9 @@ const LoginForm = ({
       // Xử lý sau khi đăng ký thành công
     } catch (error) {
       if (error.response && error.response.data.message) {
-        setErrorMessage(error.response.data.message);
+        setError(error.response.data.message);
       } else {
-        setErrorMessage("Something went wrong!");
+        setError("Something went wrong!");
       }
     }
   };

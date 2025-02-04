@@ -25,12 +25,15 @@ const Product = (props) => {
 
           <p className={"product__price"}>{price}</p>
           <p className={"product__description"}>{description}</p>
-          <form className={"product-form"} onSubmit={handleSubmit}>
-            <button onClick={() => console.log("Details clicked")}>
-              Details
-            </button>
-          </form>
-          <AddToCart id={props.product._id} />
+          <div className="product__actions">
+            <form className={"product-form"} onSubmit={handleSubmit}>
+              <button onClick={() => console.log("Details clicked")}>
+                Details
+              </button>
+            </form>
+            <AddToCart id={props.product._id} />
+          </div>
+
           {/* {console.log(props.product._id, "product")} */}
         </div>
       </div>

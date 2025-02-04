@@ -8,9 +8,7 @@ const AddToCart = ({ id }) => {
   const [productId, setProductId] = useState(id);
   // console.log("Add to Cart:", productId);
   const { isLoading: loading, error: err, sendRequest } = useHttp();
-  const { csrfToken, error2 } = useCsrfToken(
-    "http://localhost:5000/csrf-token"
-  );
+  const { csrfToken, error2 } = useCsrfToken();
 
   const handleSubmit = async (event) => {
     event.preventDefault();
