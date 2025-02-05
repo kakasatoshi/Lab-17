@@ -39,7 +39,7 @@ const LoginForm = ({
 
     try {
       const response = await axios.post(
-        "http://localhost:5000/auth/signup",
+        "http://localhost:5000/auth/login",
         { email, password, confirmPassword },
         {
           headers: { "Content-Type": "application/json" },

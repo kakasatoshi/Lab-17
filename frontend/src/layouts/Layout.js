@@ -21,7 +21,7 @@ const Layout = () => {
   useEffect(() => {
     const checkAuthStatus = async () => {
       try {
-        const response = await axios.get("http://localhost:5000/auth/status", {
+        const response = await axios.get("http://localhost:5000/status", {
           withCredentials: true,
         });
         setIsAuthenticated(response.data.isAuthenticated);

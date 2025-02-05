@@ -1,11 +1,14 @@
 import React, { useState } from "react";
+import axios from "axios";
 
-function SignupForm({ errorMessage, validationErrors, csrfToken, oldInput }) {
+function SignupForm({ validationErrors, csrfToken, oldInput }) {
   const [formData, setFormData] = useState({
     email: oldInput?.email || "",
     password: oldInput?.password || "",
     confirmPassword: oldInput?.confirmPassword || "",
   });
+  const [errorMessage, setErrorMessage] = useState("");
+  // const { email, password, confirmPassword } = formData;
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -15,9 +18,45 @@ function SignupForm({ errorMessage, validationErrors, csrfToken, oldInput }) {
     }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     // Handle form submission logic here (e.g., send data to API)
+    if (
+      formData.email === "" ||
+      formData.password === "" ||
+      formData.confirmPassword === ""
+    ) {
+      setErrorMessage("Vui lòng nhập đầy đủ thông tin");
+      return;
+    }
+
+    // Kiểm tra mật khẩu xác nhận
+    if (formData.password !== formData.confirmPassword) {
+      setErrorMessage("Passwords do not match.");
+      return;
+    }
+
+    try {
+      const response = await axios.post(
+        "http://localhost:5000/auth/signup",
+        {
+          email: formData.email,
+          password: formData.password,
+          confirmPassword: formData.confirmPassword,
+        },
+        {
+          headers: { "Content-Type": "application/json" },
+        }
+      );
+      console.log("Signup successful:", response.data);
+      // Xử lý sau khi đăng ký thành công
+    } catch (error) {
+      if (error.response && error.response.data.message) {
+        setErrorMessage(error.response.data.message);
+      } else {
+        setErrorMessage("Something went wrong!");
+      }
+    }
   };
 
   const getInputClass = (field) => {
