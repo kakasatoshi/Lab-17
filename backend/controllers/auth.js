@@ -79,6 +79,7 @@ exports.postLogin = async (req, res, next) => {
 };
 
 exports.postSignup = async (req, res, next) => {
+  console.log("postsignup", req.body);
   const { email, password, confirmPassword, username } = req.body;
 
   const errors = validationResult(req);
