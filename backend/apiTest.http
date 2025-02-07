@@ -22,7 +22,19 @@
 
 # GET http://localhost:5000/shop/orders
 
-GET http://localhost:5000/csrf-token
+# GET http://localhost:5000/csrf-token
 # GET http://localhost:5000/status
 
 # http://localhost:5000/shop/
+
+post http://localhost:5000/auth/signup
+Content-Type: application/json
+X-CSRF-Token: L7Z1i8TQ-mKsiPEaNmYyAXfN-86wQ81pslzA
+
+{
+  "email": "bobexample.com",
+  "password": "sd",
+  "confirmPassword": "h"
+}
+
+

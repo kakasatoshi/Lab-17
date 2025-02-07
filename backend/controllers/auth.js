@@ -80,7 +80,7 @@ exports.postLogin = async (req, res, next) => {
 
 exports.postSignup = async (req, res, next) => {
   console.log("postsignup", req.body);
-  const { email, password, confirmPassword, username } = req.body;
+  const { email, password, confirmPassword, username = "User" } = req.body;
 
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
@@ -90,6 +90,7 @@ exports.postSignup = async (req, res, next) => {
       validationErrors: errors.array(),
     });
   }
+  
 
   try {
     const hashedPassword = await bcrypt.hash(password, 12);
