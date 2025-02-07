@@ -1,6 +1,6 @@
 import React, { useState } from "react";
-import axios from "axios";
-import useCsrfToken from "../../http/useCsrfToken";
+import { useCsrf } from "../context/CsrfContext.js";
+import useCsrfToken from "../../http/useCsrfToken.js";
 
 function SignupForm({ validationErrors, oldInput }) {
   const [formData, setFormData] = useState({
@@ -10,10 +10,8 @@ function SignupForm({ validationErrors, oldInput }) {
   });
 
   const [errorMessage, setErrorMessage] = useState("");
-  // const [validationErrors1, setValidationErrors] = useState({
-  //   validationErrors,
-  // });
   const [isLoading, setIsLoading] = useState(false);
+  // const csrfToken = useCsrf();
   const { csrfToken, error } = useCsrfToken();
   console.log("csrfToken:", csrfToken);
 
@@ -25,93 +23,59 @@ function SignupForm({ validationErrors, oldInput }) {
     }));
   };
 
-  const getInputClass = (field) => {
-    return validationErrors?.some((error) => error.param === field)
-      ? "invalid"
-      : "";
-  };
-
-  const getFieldError = (field) => {
-    const error = validationErrors?.find((err) => err.param === field);
-    return error ? error.msg : "";
-  };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     setErrorMessage("");
     setIsLoading(true);
 
-    // if (
-    //   formData.email === "" ||
-    //   formData.password === "" ||
-    //   formData.confirmPassword === ""
-    // ) {
-    //   setErrorMessage("Vui lòng nhập đầy đủ thông tin");
-    //   setIsLoading(false);
-    //   return;
-    // }
-
-    // if (formData.password !== formData.confirmPassword) {
-    //   setErrorMessage("Passwords do not match.");
-    //   setIsLoading(false);
-    //   return;
-    // }
+    if (!csrfToken) {
+      setErrorMessage("Lỗi hệ thống! Không tìm thấy CSRF Token.");
+      setIsLoading(false);
+      return;
+    }
 
     try {
-      fetch("http://localhost:5000/auth/signup", {
+      const response = await fetch("http://localhost:5000/auth/signup", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "X-CSRF-Token": "L7Z1i8TQ-mKsiPEaNmYyAXfN-86wQ81pslzA",
+          "X-CSRF-Token": csrfToken.toString(),
         },
-        body: JSON.stringify({
-          email: formData.email,
-          password: formData.password,
-          confirmPassword: formData.confirmPassword,
-        }),
-      })
-        .then(async (response) => {
-          const data = await response.json();
-          console.log("Lỗi từ server:", data);
-        })
-        .catch((error) => console.error("Lỗi kết nối:", error));
+        body: JSON.stringify(formData),
+      });
 
-      ///////////////
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.message || "Something went wrong!");
+      }
 
-      // const response = await axios.post(
-      //   "http://localhost:5000/auth/signup",
-      //   {
-      //     email: formData.email,
-      //     password: formData.password,
-      //     confirmPassword: formData.confirmPassword,
-      //   },
-      //   {
-      //     headers: {
-      //       "Content-Type": "application/json",
-      //       "X-CSRF-Token": csrfToken,
-      //     },
-      //   }
-      // );
-
-      // console.log("Signup successful:", response);
-    } catch (error) {
-      // if (error.response) {
-      //   const { errorMessage, validationErrors } = error.response.data;
-      //   if (validationErrors) {
-      //     const formattedErrors = {};
-      //     validationErrors.forEach((err) => {
-      //       formattedErrors[err.path] = err.msg;
-      //     });
-      //     setValidationErrors(formattedErrors);
-      //   } else {
-      //     setErrorMessage(errorMessage || "Có lỗi xảy ra!");
-      //   }
-      // } else {
-      //   setErrorMessage("Lỗi kết nối đến server!");
-      // }
-    } finally {
-      setIsLoading(false);
+      alert("Signup successful!");
+    } catch (err) {
+      setErrorMessage(err.message);
     }
+
+    // try {
+    //   const response = await fetch("http://localhost:5000/auth/signup", {
+    //     method: "POST",
+    //     headers: {
+    //       "Content-Type": "application/json",
+    //       "CSRF-Token": csrfToken,
+    //     },
+    //     body: JSON.stringify(formData),
+    //   });
+
+    //   if (!response.ok) {
+    //     throw new Error(`HTTP error! Status: ${response.status}`);
+    //   }
+
+    //   const data = await response.json();
+    //   console.log("Server response:", data);
+    // } catch (error) {
+    //   setErrorMessage("Lỗi đăng ký! Vui lòng thử lại.");
+    //   console.error("Lỗi kết nối hoặc phản hồi không hợp lệ:", error);
+    // }
+
+    setIsLoading(false);
   };
 
   return (
@@ -123,49 +87,35 @@ function SignupForm({ validationErrors, oldInput }) {
         <div className="form-control">
           <label htmlFor="email">E-Mail</label>
           <input
-            className={getInputClass("email")}
             type="email"
             name="email"
             id="email"
             value={formData.email}
             onChange={handleChange}
           />
-          {getFieldError("email") && (
-            <p className="error-text">{getFieldError("email")}</p>
-          )}
         </div>
 
         <div className="form-control">
           <label htmlFor="password">Password</label>
           <input
-            className={getInputClass("password")}
             type="password"
             name="password"
             id="password"
             value={formData.password}
             onChange={handleChange}
           />
-          {getFieldError("password") && (
-            <p className="error-text">{getFieldError("password")}</p>
-          )}
         </div>
 
         <div className="form-control">
           <label htmlFor="confirmPassword">Confirm Password</label>
           <input
-            className={getInputClass("confirmPassword")}
             type="password"
             name="confirmPassword"
             id="confirmPassword"
             value={formData.confirmPassword}
             onChange={handleChange}
           />
-          {getFieldError("confirmPassword") && (
-            <p className="error-text">{getFieldError("confirmPassword")}</p>
-          )}
         </div>
-
-        <input type="hidden" name="_csrf" value={csrfToken} />
 
         <button className="btn" type="submit" disabled={isLoading}>
           {isLoading ? "Đang đăng ký..." : "Signup"}

@@ -1,23 +1,17 @@
-import { Outlet } from "react-router-dom";
-// import Navbar from "../components/includes/Mynavbar";
+import { Outlet, useLocation } from "react-router-dom";
 import css from "./layOut.module.css";
 import Header from "../components/includes/Header";
 import React, { useState, useEffect } from "react";
-import {
-  BrowserRouter as Router,
-  Route,
-  Routes,
-  useLocation,
-} from "react-router-dom";
 import axios from "axios";
 import useCsrfToken from "../http/useCsrfToken";
 import End from "../components/includes/End";
+import { CsrfProvider } from "../components/context/CsrfContext.js"; // Import context
 
 const Layout = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const { csrfToken, error } = useCsrfToken();
+  console.log("csrfToken:", csrfToken);
 
-  // Xác định trạng thái đăng nhập (giả định lấy từ API hoặc context)
   useEffect(() => {
     const checkAuthStatus = async () => {
       try {
@@ -34,23 +28,23 @@ const Layout = () => {
     checkAuthStatus();
   }, []);
 
-  // Lấy path từ hook của react-router-dom
   const location = useLocation();
 
   return (
-    <div>
-      {/* <Navbar /> */}
-      <Header
-        path={location.pathname} // Lấy path hiện tại
-        isAuthenticated={isAuthenticated} // Trạng thái đăng nhập
-        csrfToken={csrfToken} // Token CSRF
-      />
-      <div className={css.layout}>
-        <Outlet csrfToken={csrfToken} />
+    <CsrfProvider csrfToken={csrfToken}>
+      <div>
+        <Header
+          path={location.pathname}
+          isAuthenticated={isAuthenticated}
+          csrfToken={csrfToken}
+        />
+        <div className={css.layout}>
+          <Outlet />
+        </div>
+        <End />
+        <footer>Footer</footer>
       </div>
-      <End />
-      <footer>Footer</footer>
-    </div>
+    </CsrfProvider>
   );
 };
 

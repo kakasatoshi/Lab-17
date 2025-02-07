@@ -29,7 +29,7 @@
 
 post http://localhost:5000/auth/signup
 Content-Type: application/json
-X-CSRF-Token: L7Z1i8TQ-mKsiPEaNmYyAXfN-86wQ81pslzA
+CSRF-Token: 4Q8erlOk-37EEkAp0TZrRrG2vqkpgOpKPXiI
 
 {
   "email": "bobexample.com",
