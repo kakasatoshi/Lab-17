@@ -11,8 +11,8 @@ function SignupForm({ validationErrors, oldInput }) {
 
   const [errorMessage, setErrorMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  // const csrfToken = useCsrf();
-  const { csrfToken, error } = useCsrfToken();
+
+  const csrfToken = useCsrf();
   console.log("csrfToken:", csrfToken);
 
   const handleChange = (e) => {
@@ -34,17 +34,18 @@ function SignupForm({ validationErrors, oldInput }) {
       return;
     }
 
+    console.log("formData:", formData);
     try {
       const response = await fetch("http://localhost:5000/auth/signup", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "X-CSRF-Token": csrfToken.toString(),
+          "CSRF-Token": csrfToken,
         },
         body: JSON.stringify(formData),
       });
 
-      const data = await response.json();
+      const data = await response.json().catch(() => ({})); // Tránh lỗi JSON parse
       if (!response.ok) {
         throw new Error(data.message || "Something went wrong!");
       }
@@ -53,27 +54,6 @@ function SignupForm({ validationErrors, oldInput }) {
     } catch (err) {
       setErrorMessage(err.message);
     }
-
-    // try {
-    //   const response = await fetch("http://localhost:5000/auth/signup", {
-    //     method: "POST",
-    //     headers: {
-    //       "Content-Type": "application/json",
-    //       "CSRF-Token": csrfToken,
-    //     },
-    //     body: JSON.stringify(formData),
-    //   });
-
-    //   if (!response.ok) {
-    //     throw new Error(`HTTP error! Status: ${response.status}`);
-    //   }
-
-    //   const data = await response.json();
-    //   console.log("Server response:", data);
-    // } catch (error) {
-    //   setErrorMessage("Lỗi đăng ký! Vui lòng thử lại.");
-    //   console.error("Lỗi kết nối hoặc phản hồi không hợp lệ:", error);
-    // }
 
     setIsLoading(false);
   };
@@ -116,7 +96,7 @@ function SignupForm({ validationErrors, oldInput }) {
             onChange={handleChange}
           />
         </div>
-
+        <input type="hidden" name="_csrf" value={csrfToken} />
         <button className="btn" type="submit" disabled={isLoading}>
           {isLoading ? "Đang đăng ký..." : "Signup"}
         </button>

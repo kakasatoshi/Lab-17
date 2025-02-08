@@ -90,8 +90,6 @@ exports.postSignup = async (req, res, next) => {
       validationErrors: errors.array(),
     });
   }
-  
-
   try {
     const hashedPassword = await bcrypt.hash(password, 12);
     const user = new User({

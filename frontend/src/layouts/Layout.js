@@ -3,14 +3,13 @@ import css from "./layOut.module.css";
 import Header from "../components/includes/Header";
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import useCsrfToken from "../http/useCsrfToken";
 import End from "../components/includes/End";
 import { CsrfProvider } from "../components/context/CsrfContext.js"; // Import context
 
 const Layout = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const { csrfToken, error } = useCsrfToken();
-  console.log("csrfToken:", csrfToken);
+  const [csrfToken, setCsrfToken] = useState("");
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     const checkAuthStatus = async () => {
@@ -26,6 +25,26 @@ const Layout = () => {
     };
 
     checkAuthStatus();
+  }, []);
+
+  useEffect(() => {
+    const fetchCsrfToken = async () => {
+      try {
+        const response = await fetch("http://localhost:5000/csrf-token");
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+
+        const data = await response.json();
+        setCsrfToken(data.csrfToken);
+      } catch (err) {
+        console.error("Failed to fetch CSRF token:", err);
+        setError(err);
+      }
+    };
+
+    fetchCsrfToken();
   }, []);
 
   const location = useLocation();

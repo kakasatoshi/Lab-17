@@ -29,12 +29,12 @@
 
 post http://localhost:5000/auth/signup
 Content-Type: application/json
-CSRF-Token: 4Q8erlOk-37EEkAp0TZrRrG2vqkpgOpKPXiI
+CSRF-Token: GMxH8DqT-iXkOGhTXJQdph02X88_VbG_T0ag
 
 {
-  "email": "bobexample.com",
-  "password": "sd",
-  "confirmPassword": "h"
+  "email": "anhsequayve922111@gmail.com",
+  "password": "K12345",
+  "confirmPassword": "K12345"
 }
 
 

@@ -71,15 +71,16 @@ app.use((req, res, next) => {
   next();
 });
 
-app.get("/csrf-token", (req, res) => res.json({ csrfToken: req.csrfToken() }));
+app.get("/csrf-token", (req, res, next) =>
+  res.json({ csrfToken: req.csrfToken() })
 
-app.get("/status", (req, res) => {
-  res
-    .status(200)
-    .json({
-      isAuthenticated: !!req.session.isLoggedIn,
-      user: req.session.user || null,
-    });
+);
+
+app.get("/status", (req, res, next) => {
+  res.status(200).json({
+    isAuthenticated: !!req.session.isLoggedIn,
+    user: req.session.user || null,
+  });
 });
 
 app.use("/admin", adminRoutes);
@@ -91,12 +92,10 @@ app.get("*", (req, res) =>
 );
 
 app.use((error, req, res, next) => {
-  res
-    .status(500)
-    .json({
-      status: "error",
-      message: error.message || "Internal server error",
-    });
+  res.status(500).json({
+    status: "error",
+    message: error.message || "Internal server error",
+  });
 });
 
 mongoose
