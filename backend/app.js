@@ -20,13 +20,19 @@ const MONGODB_URI =
 
 const app = express();
 const store = new MongoDBStore({ uri: MONGODB_URI, collection: "sessions" });
-const csrfProtection = csrf({ cookie: true });
+const csrfProtection = csrf();
+// const csrfProtection = csrf({ cookie: true });
 
 store.on("error", (err) => console.error("Store error:", err));
 
 app.use(cookieParser());
 app.use(bodyParser.json());
-app.use(cors({ origin: "http://localhost:3000", credentials: true }));
+app.use(cors({
+  origin: "http://localhost:3000",
+  credentials: true,
+  allowedHeaders: ["Content-Type", "Authorization", "csrf-token"], // Thêm csrf-token
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"]
+}));
 
 const fileStorage = multer.diskStorage({
   destination: (req, file, cb) => cb(null, "images"),
@@ -44,14 +50,15 @@ app.use(express.static(path.join(__dirname, "public")));
 app.use("/images", express.static(path.join(__dirname, "images")));
 app.use(express.static(path.join(__dirname, "build")));
 
-app.use(
-  session({
-    secret: "my secret",
-    resave: false,
-    saveUninitialized: false,
-    store: store,
-  })
-);
+app.use(session({
+  secret: "my secret",
+  resave: false,
+  saveUninitialized: false,
+  store: store,
+  cookie: { secure: false, httpOnly: true, sameSite: "lax" } // 🔥 QUAN TRỌNG
+}));
+
+
 app.use(csrfProtection);
 app.use(flash());
 
@@ -73,7 +80,6 @@ app.use((req, res, next) => {
 
 app.get("/csrf-token", (req, res, next) =>
   res.json({ csrfToken: req.csrfToken() })
-
 );
 
 app.get("/status", (req, res, next) => {

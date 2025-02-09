@@ -5,13 +5,13 @@ const sendEmail = async (to, subject, text) => {
     let transporter = nodemailer.createTransport({
       service: "gmail", // Bạn có thể dùng SMTP khác
       auth: {
-        user: "cbs.uv2@gmail.com", // Thay bằng email của bạn
-        pass: "Mnbv@0987", // Thay bằng mật khẩu ứng dụng của bạn
+        user: "taiddfx21231@funix.edu.vn", // Thay bằng email của bạn
+        pass: "kqso rtny ljpp tlbe", // Thay bằng mật khẩu ứng dụng của bạn
       },
     });
 
     let mailOptions = {
-      from: "cbs.uv2@gmail.com",
+      from: "taiddfx21231@funix.edu.vn",
       to: to,
       subject: subject,
       text: text,

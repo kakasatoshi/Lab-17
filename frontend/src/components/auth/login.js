@@ -1,21 +1,22 @@
 import React, { useState } from "react";
 import "../../css/auth.css";
 import axios from "axios";
+import { useNavigate } from "react-router-dom";
 
-const LoginForm = ({
-  errorMessage = "",
-  validationErrors = [],
-  oldInput = {},
-  csrfToken,
-}) => {
+
+const LoginForm = ({ validationErrors = [], oldInput = {} }) => {
   const [formData, setFormData] = useState({
     email: oldInput.email || "",
     password: oldInput.password || "",
   });
-  const { email, password } = formData;
-  const [error, setError] = useState(false);
 
-  const [confirmPassword, setConfirmPassword] = useState("");
+  const [error, setError] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [csrfToken, setCsrfToken] = useState("");
+  const navigate = useNavigate();
+
+  // const [confirmPassword, setConfirmPassword] = useState("");
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prevData) => ({
@@ -26,33 +27,43 @@ const LoginForm = ({
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (email === "" || password === "" || confirmPassword === "") {
-      setError("Vui lòng nhập đầy đủ thông tin");
-      return;
-    }
-
-    // Kiểm tra mật khẩu xác nhận
-    if (password !== confirmPassword) {
-      setError("Passwords do not match.");
-      return;
-    }
 
     try {
-      const response = await axios.post(
-        "http://localhost:5000/auth/login",
-        { email, password, confirmPassword },
-        {
-          headers: { "Content-Type": "application/json" },
-        }
-      );
-      console.log("Signup successful:", response.data);
-      // Xử lý sau khi đăng ký thành công
-    } catch (error) {
-      if (error.response && error.response.data.message) {
-        setError(error.response.data.message);
-      } else {
-        setError("Something went wrong!");
+      // Lấy CSRF token trước
+      const csrfRes = await fetch("http://localhost:5000/csrf-token", {
+        credentials: "include",
+      });
+      const csrfData = await csrfRes.json();
+      const csrfToken = csrfData.csrfToken; // ✅ Lưu vào biến trước
+
+      console.log("CSRF Token:", csrfToken); // 🛠 Kiểm tra token có hợp lệ không
+
+      // Gửi request đăng nhập
+      const response = await fetch("http://localhost:5000/auth/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "CSRF-Token": csrfToken, // ✅ Dùng biến thay vì state
+        },
+        credentials: "include",
+        body: JSON.stringify({
+          email: formData.email,
+          password: formData.password,
+        }),
+      });
+
+      const data = await response.json();
+      console.log("Phản hồi từ server:", data);
+
+      if (!response.ok) {
+        throw new Error(data.errorMessage || "Lỗi đăng nhập!");
       }
+
+      alert("Đăng nhập thành công!");
+      window.location.href = "/"; // ✅ Chuyển hướng sau khi đăng nhập thành công
+    } catch (error) {
+      console.error("Lỗi khi gửi request:", error);
+      setErrorMessage(error.message || "Có lỗi xảy ra!");
     }
   };
 

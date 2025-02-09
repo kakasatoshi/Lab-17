@@ -30,7 +30,10 @@ const Layout = () => {
   useEffect(() => {
     const fetchCsrfToken = async () => {
       try {
-        const response = await fetch("http://localhost:5000/csrf-token");
+        const response = await fetch("http://localhost:5000/csrf-token", {
+          method: "GET",
+          credentials: "include", // Để gửi cookie nếu backend yêu cầu xác thực
+        });
 
         if (!response.ok) {
           throw new Error(`HTTP error! Status: ${response.status}`);

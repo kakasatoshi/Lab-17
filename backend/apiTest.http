@@ -15,7 +15,9 @@
 
 #  { "productId": "676d11dda85fb3efc1f81598"}
 
-# GET http://localhost:5000/shop/cart 
+GET http://localhost:5000/shop/cart 
+# Content-Type: application/json
+# CSRF-Token: q4qGlZHx-MElQntC4K0vOKLm0D01s1eHR6_w
 
 
 # POST http://localhost:5000/shop/createOrder 
@@ -27,14 +29,25 @@
 
 # http://localhost:5000/shop/
 
-post http://localhost:5000/auth/signup
-Content-Type: application/json
-CSRF-Token: GMxH8DqT-iXkOGhTXJQdph02X88_VbG_T0ag
+# post http://localhost:5000/auth/signup
+# Content-Type: application/json
+# CSRF-Token: q4qGlZHx-MElQntC4K0vOKLm0D01s1eHR6_w
 
-{
-  "email": "anhsequayve922111@gmail.com",
-  "password": "K12345",
-  "confirmPassword": "K12345"
-}
+# {
+#   "email": "anhsequayve922111gmail.com",
+#   "password": "K12345",
+#   "confirmPassword": "K12345"
+# }
+
+# post http://localhost:5000/auth/login
+# Content-Type: application/json
+# CSRF-Token: q4qGlZHx-MElQntC4K0vOKLm0D01s1eHR6_w
+
+# {
+#   "email": "",
+#   "password": ""
+
+# }
 
 
+#  http://localhost:5000/auth/logout
