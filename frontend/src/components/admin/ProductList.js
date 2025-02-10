@@ -1,64 +1,115 @@
 import React, { useState, useEffect } from "react";
-import ProductForm from "./ProductForm";
+import "../../css/product.css";
+import useHttp from "../../http/useHttp";
+import { useNavigate } from "react-router-dom";
 
-const ProductPage = ({ productId, editing }) => {
-  const [product, setProduct] = useState(null);
-  const [errorMessage, setErrorMessage] = useState("");
-  const [validationErrors, setValidationErrors] = useState([]);
-  const csrfToken = "your_csrf_token"; // Get this from your backend or context
+const ProductList = () => {
+  const navigate = useNavigate();
+  const { isLoading, error, sendRequest } = useHttp();
+  const [products, setProducts] = useState([]);
+  const [csrfToken, setCsrfToken] = useState();
+
+  const applyData = (data) => {
+    // Xử lý dữ liệu từ API
+    setProducts(data.products);
+    console.log(data); // Hoặc cập nhật state hoặc render dữ liệu vào giao diện
+  };
 
   useEffect(() => {
-    if (editing) {
-      // Fetch product details if editing
-      fetch(`/api/products/${productId}`)
-        .then((res) => res.json())
-        .then((data) => setProduct(data.product))
-        .catch((err) => setErrorMessage("Error loading product."));
-    }
-  }, [editing, productId]);
-
-  const handleSubmit = (formData) => {
-    const formDataToSend = new FormData();
-    for (const key in formData) {
-      formDataToSend.append(key, formData[key]);
-    }
-
-    const url = editing
-      ? `http://localhost:5000/admin/edit-product`
-      : "http://localhost:5000/admin/add-product";
-
-    fetch(url, {
-      method: "POST",
-      body: formDataToSend,
-      headers: {
-        "CSRF-Token": csrfToken,
-      },
-    })
-      .then((res) => res.json())
+    fetch("http://localhost:5000/csrf-token", { credentials: "include" })
+      .then((response) => response.json())
       .then((data) => {
-        if (data.errors) {
-          setValidationErrors(data.errors);
-        } else {
-          // Redirect or update UI on success
-        }
+        setCsrfToken(data.csrfToken); // Lưu token trong state
       })
-      .catch((err) => setErrorMessage("Error submitting form."));
+      .catch((error) => console.error("CSRF token fetch error:", error));
+  }, []);
+
+  useEffect(() => {
+    const requestConfig = {
+      url: "http://localhost:5000/admin/products", // Địa chỉ API của bạn
+    };
+
+    sendRequest(requestConfig, applyData);
+  }, []); // Gọi lại sendRequest khi component mount
+
+  if (isLoading) {
+    return <p>Loading...</p>;
+  }
+
+  if (error) {
+    return <p>{error}</p>;
+  }
+
+  const deleteProductHandler = async (productId) => {
+    const url = "http://localhost:5000/admin/delete-product";
+    const payload = {
+      productId: productId,
+    };
+
+    try {
+      const response = await fetch(url, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "CSRF-Token": csrfToken,
+        },
+        credentials: "include",
+        body: JSON.stringify(payload),
+      });
+      if (response.ok) navigate("/admin/ProductList"); // Redirect to product list
+    } catch (error) {
+      console.error("Error submitting form", error);
+    }
+    navigate("/admin/ProductList");
+    window.location.reload();
+  };
+
+  const editProductHandler = (product) => {
+    navigate(`/admin/EditProduct/${product.id}`, {
+      state: { editing: true, product: product },
+    });
   };
 
   return (
     <div>
-      {product && (
-        <ProductForm
-          product={product}
-          editing={editing}
-          errorMessage={errorMessage}
-          validationErrors={validationErrors}
-          csrfToken={csrfToken}
-          onSubmit={handleSubmit}
-        />
-      )}
+      <main>
+        {products.length > 0 ? (
+          <div className="grid">
+            {products.map((product) => (
+              <article className="card product-item" key={product._id}>
+                <header className="card__header">
+                  <h1 className="product__title">{product.title}</h1>
+                </header>
+                <div className="card__image">
+                  <img src={product.imageUrl} alt={product.title} />
+                </div>
+                <div className="card__content">
+                  <h2 className="product__price">${product.price}</h2>
+                  <p className="product__description">{product.description}</p>
+                </div>
+                <div className="card__actions">
+                  <button
+                    className="btn"
+                    onClick={() => editProductHandler(product)}
+                  >
+                    Edit
+                  </button>
+                  <button
+                    className="btn"
+                    onClick={() => deleteProductHandler(product._id)}
+                  >
+                    Delete
+                  </button>
+                </div>
+              </article>
+            ))}
+          </div>
+        ) : (
+          <h1>No Products Found!</h1>
+        )}
+      </main>
     </div>
   );
 };
 
-export default ProductPage;
+export default ProductList;

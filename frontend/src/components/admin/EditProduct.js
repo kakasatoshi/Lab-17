@@ -1,18 +1,43 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import "../../css/forms.css";
+import useCsrfToken from "../../http/useCsrfToken";
 const ProductForm = ({
-  csrfToken,
   editing = false,
   product = {},
   validationErrors = [],
   errorMessage = "",
 }) => {
-  const [title, setTitle] = useState(product.title || "");
-  const [price, setPrice] = useState(product.price || "");
-  const [description, setDescription] = useState(product.description || "");
+  const [title, setTitle] = useState(product?.title ?? "");
+  const [price, setPrice] = useState(product?.price ?? "");
+  const [description, setDescription] = useState(product?.description ?? "");
   const [image, setImage] = useState(null);
+  const [csrfToken, setCsrfToken] = useState();
 
-  const handleSubmit = (event) => {
+  useEffect(() => {
+    const fetchCsrfToken = async () => {
+      try {
+        const response = await fetch("http://localhost:5000/csrf-token", {
+          credentials: "include",
+        });
+        const data = await response.json();
+        setCsrfToken(data.csrfToken);
+      } catch (error) {
+        console.error("CSRF token fetch error:", error);
+      }
+    };
+    fetchCsrfToken();
+  }, []);
+
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (file && file.type.startsWith("image/")) {
+      setImage(file);
+    } else {
+      alert("Please select a valid image file.");
+    }
+  };
+
+  const handleSubmit = async (event) => {
     event.preventDefault();
 
     const formData = new FormData();
@@ -24,20 +49,21 @@ const ProductForm = ({
     formData.append("_csrf", csrfToken);
 
     const url = editing
-      ? `http://localhost:5000/admin/edit-product`
+      ? "http://localhost:5000/admin/edit-product"
       : "http://localhost:5000/admin/add-product";
 
-    fetch(url, {
-      method: "POST",
-      body: formData,
-    })
-      .then((response) => response.json())
-      .then((data) => {
-        console.log("Success:", data);
-      })
-      .catch((error) => {
-        console.error("Error:", error);
+    try {
+      const response = await fetch(url, {
+        method: "POST",
+        body: formData,
+        credentials: "include", // Quan trọng nếu server yêu cầu cookie
       });
+
+      const data = await response.json();
+      console.log("Success:", data);
+    } catch (error) {
+      console.error("Error:", error);
+    }
   };
 
   return (
@@ -69,7 +95,7 @@ const ProductForm = ({
             type="file"
             name="image"
             id="image"
-            onChange={(e) => setImage(e.target.files[0])}
+            onChange={handleFileChange}
           />
         </div>
         <div className="form-control">
