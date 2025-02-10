@@ -113,9 +113,12 @@ exports.postCart = (req, res, next) => {
 
 exports.postCartDeleteProduct = (req, res, next) => {
   const prodId = req.body.productId;
+  // console.log("prodId", prodId);
+  // console.log("req.user", req.user);
   req.user
     .removeFromCart(prodId)
     .then((result) => {
+      // console.log("Product deleted from cart", result);
       res.status(200).json({ message: "Product removed from cart" });
     })
     .catch((err) => {
@@ -128,7 +131,6 @@ exports.postCartDeleteProduct = (req, res, next) => {
 exports.postOrder = (req, res, next) => {
   req.user
     .populate("cart.items.productId")
-    .execPopulate()
     .then((user) => {
       const products = user.cart.items.map((i) => {
         return { quantity: i.quantity, product: { ...i.productId._doc } };

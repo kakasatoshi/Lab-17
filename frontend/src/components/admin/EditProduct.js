@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-
+import "../../css/forms.css";
 const ProductForm = ({
   csrfToken,
   editing = false,
