@@ -20,7 +20,13 @@ const Product = (props) => {
         <div className={"product-item"}>
           <h2 className={"product__title"}>{title}</h2>
           <div className={"card__image"}>
-            <img src={imageUrl} alt={title} />
+              <img
+                    src={`http://localhost:5000/${imageUrl.replace(
+                      /\\/g,
+                      "/"
+                    )}`} // Chuyển \ thành /
+                    alt={title}
+                  />
           </div>
 
           <p className={"product__price"}>{price}</p>

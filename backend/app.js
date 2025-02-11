@@ -27,17 +27,19 @@ store.on("error", (err) => console.error("Store error:", err));
 
 app.use(cookieParser());
 app.use(bodyParser.json());
-app.use(cors({
-  origin: "http://localhost:3000",
-  credentials: true,
-  allowedHeaders: ["Content-Type", "Authorization", "csrf-token"], // Thêm csrf-token
-  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"]
-}));
+app.use(
+  cors({
+    origin: "http://localhost:3000",
+    credentials: true,
+    allowedHeaders: ["Content-Type", "Authorization", "csrf-token"], // Thêm csrf-token
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  })
+);
 
 const fileStorage = multer.diskStorage({
   destination: (req, file, cb) => cb(null, "images"),
   filename: (req, file, cb) =>
-    cb(null, new Date().toISOString() + "-" + file.originalname),
+    cb(null, Date.now() + "-" + file.originalname.replace(/\s+/g, "-")),
 });
 const fileFilter = (req, file, cb) => {
   if (["image/png", "image/jpg", "image/jpeg"].includes(file.mimetype))
@@ -50,14 +52,15 @@ app.use(express.static(path.join(__dirname, "public")));
 app.use("/images", express.static(path.join(__dirname, "images")));
 app.use(express.static(path.join(__dirname, "build")));
 
-app.use(session({
-  secret: "my secret",
-  resave: false,
-  saveUninitialized: false,
-  store: store,
-  cookie: { secure: false, httpOnly: true, sameSite: "lax" } // 🔥 QUAN TRỌNG
-}));
-
+app.use(
+  session({
+    secret: "my secret",
+    resave: false,
+    saveUninitialized: false,
+    store: store,
+    cookie: { secure: false, httpOnly: true, sameSite: "lax" }, // 🔥 QUAN TRỌNG
+  })
+);
 
 app.use(csrfProtection);
 app.use(flash());

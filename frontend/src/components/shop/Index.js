@@ -39,7 +39,13 @@ const Index = () => {
                   <h1 className="product__title">{product.title}</h1>
                 </header>
                 <div className="card__image">
-                  <img src={product.imageUrl} alt={product.title} />
+                  <img
+                    src={`http://localhost:5000/${product.imageUrl.replace(
+                      /\\/g,
+                      "/"
+                    )}`} // Chuyển \ thành /
+                    alt={product.title}
+                  />
                 </div>
                 <div className="card__content">
                   <h2 className="product__price">${product.price}</h2>

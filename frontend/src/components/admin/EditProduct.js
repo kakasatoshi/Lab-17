@@ -1,17 +1,22 @@
 import React, { useEffect, useState } from "react";
 import "../../css/forms.css";
-import useCsrfToken from "../../http/useCsrfToken";
-const ProductForm = ({
-  editing = false,
-  product = {},
-  validationErrors = [],
-  errorMessage = "",
-}) => {
+import { useNavigate, useLocation } from "react-router-dom";
+
+const ProductForm = () => {
+  const location = useLocation();
+  const { editing, product } = location.state || {
+    editing: false,
+    product: [],
+  };
   const [title, setTitle] = useState(product?.title ?? "");
   const [price, setPrice] = useState(product?.price ?? "");
   const [description, setDescription] = useState(product?.description ?? "");
   const [image, setImage] = useState(null);
   const [csrfToken, setCsrfToken] = useState();
+  const [validationErrors, setValidationErrors] = useState([]);
+  const [preview, setPreview] = useState("");
+  const [error, setError] = useState("");
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchCsrfToken = async () => {
@@ -32,6 +37,7 @@ const ProductForm = ({
     const file = e.target.files[0];
     if (file && file.type.startsWith("image/")) {
       setImage(file);
+      setPreview(URL.createObjectURL(file));
     } else {
       alert("Please select a valid image file.");
     }
@@ -56,11 +62,32 @@ const ProductForm = ({
       const response = await fetch(url, {
         method: "POST",
         body: formData,
-        credentials: "include", // Quan trọng nếu server yêu cầu cookie
+        credentials: "include",
       });
 
       const data = await response.json();
+      if (data.success) {
+        setTitle("");
+        setPrice("");
+        setDescription("");
+        setImage(null);
+        setPreview("");
+        setValidationErrors([]);
+        setError("");
+        alert("Product saved successfully!");
+        navigate("/admin/ProductList"); // Chuyển đến trang quản lý sản phẩm
+        return;
+      }
+
       console.log("Success:", data);
+
+      if (!data.success) {
+        if (data.validationErrors) {
+          setValidationErrors(data.validationErrors); // Lưu lỗi vào state
+        }
+        setError(data.message || "Something went wrong!");
+        throw new Error(data.message || "Something went wrong!");
+      }
     } catch (error) {
       console.error("Error:", error);
     }
@@ -68,8 +95,17 @@ const ProductForm = ({
 
   return (
     <main>
-      {errorMessage && (
-        <div className="user-message user-message--error">{errorMessage}</div>
+      {/* {validationErrors.length > 0 && (
+        <div className="user-message user-message--error">
+          {validationErrors.map((err, index) => (
+            <p key={index}>
+              {err.path}: {err.msg}
+            </p>
+          ))}
+        </div>
+      )} */}
+      {error.length > 0 && (
+        <div className="user-message user-message--error">{error}</div>
       )}
       <form
         className="product-form"
@@ -80,7 +116,7 @@ const ProductForm = ({
           <label htmlFor="title">Title</label>
           <input
             className={
-              validationErrors.some((e) => e.param === "title") ? "invalid" : ""
+              validationErrors.some((e) => e.path === "title") ? "invalid" : ""
             }
             type="text"
             name="title"
@@ -88,7 +124,15 @@ const ProductForm = ({
             value={title}
             onChange={(e) => setTitle(e.target.value)}
           />
+          {validationErrors
+            .filter((e) => e.path === "title")
+            .map((e, index) => (
+              <div key={index} className="error-message">
+                {e.msg}
+              </div>
+            ))}
         </div>
+
         <div className="form-control">
           <label htmlFor="image">Image</label>
           <input
@@ -97,12 +141,14 @@ const ProductForm = ({
             id="image"
             onChange={handleFileChange}
           />
+          {preview && <img src={preview} alt="Preview" width="200" />}
         </div>
+
         <div className="form-control">
           <label htmlFor="price">Price</label>
           <input
             className={
-              validationErrors.some((e) => e.param === "price") ? "invalid" : ""
+              validationErrors.some((e) => e.path === "price") ? "invalid" : ""
             }
             type="number"
             name="price"
@@ -111,12 +157,20 @@ const ProductForm = ({
             value={price}
             onChange={(e) => setPrice(e.target.value)}
           />
+          {validationErrors
+            .filter((e) => e.path === "price")
+            .map((e, index) => (
+              <div key={index} className="error-message">
+                {e.msg}
+              </div>
+            ))}
         </div>
+
         <div className="form-control">
           <label htmlFor="description">Description</label>
           <textarea
             className={
-              validationErrors.some((e) => e.param === "description")
+              validationErrors.some((e) => e.path === "description")
                 ? "invalid"
                 : ""
             }
@@ -126,7 +180,15 @@ const ProductForm = ({
             value={description}
             onChange={(e) => setDescription(e.target.value)}
           ></textarea>
+          {validationErrors
+            .filter((e) => e.path === "description")
+            .map((e, index) => (
+              <div key={index} className="error-message">
+                {e.msg}
+              </div>
+            ))}
         </div>
+
         {editing && (
           <input type="hidden" name="productId" value={product._id} />
         )}

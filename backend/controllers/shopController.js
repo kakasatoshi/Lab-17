@@ -1,5 +1,9 @@
 const Product = require("../models/product");
 const Order = require("../models/order");
+const fs = require("fs");
+const path = require("path");
+
+const PDFDocument = require("pdfkit");
 
 exports.getProducts = (req, res, next) => {
   const ITEMS_PER_PAGE = 10;
@@ -174,6 +178,7 @@ exports.getOrders = (req, res, next) => {
 
 exports.getInvoice = (req, res, next) => {
   const orderId = req.params.orderId;
+
   Order.findById(orderId)
     .then((order) => {
       if (!order) {
@@ -182,8 +187,13 @@ exports.getInvoice = (req, res, next) => {
       if (order.user.userId.toString() !== req.user._id.toString()) {
         return next(new Error("Unauthorized"));
       }
+      // console.log("-----------------------");
       const invoiceName = "invoice-" + orderId + ".pdf";
+      // console.log("invoiceName", invoiceName);
+
       const invoicePath = path.join("data", "invoices", invoiceName);
+
+      console.log("invoicePath", invoicePath);
 
       const pdfDoc = new PDFDocument();
       res.setHeader("Content-Type", "application/pdf");
@@ -191,6 +201,7 @@ exports.getInvoice = (req, res, next) => {
         "Content-Disposition",
         'inline; filename="' + invoiceName + '"'
       );
+      console.log("pdfDoc", pdfDoc, res);
       pdfDoc.pipe(fs.createWriteStream(invoicePath));
       pdfDoc.pipe(res);
 
