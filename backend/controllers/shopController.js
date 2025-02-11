@@ -117,13 +117,13 @@ exports.postCart = (req, res, next) => {
 
 exports.postCartDeleteProduct = (req, res, next) => {
   const prodId = req.body.productId;
-  // console.log("prodId", prodId);
+  console.log("prodId", prodId);
   // console.log("req.user", req.user);
   req.user
     .removeFromCart(prodId)
     .then((result) => {
-      // console.log("Product deleted from cart", result);
-      res.status(200).json({ message: "Product removed from cart" });
+      console.log("Product deleted from cart", result);
+      res.status(200).json({ message: "Product removed from cart", result });
     })
     .catch((err) => {
       const error = new Error(err);
@@ -212,19 +212,24 @@ exports.getInvoice = (req, res, next) => {
       let totalPrice = 0;
       order.products.forEach((prod) => {
         totalPrice += prod.quantity * prod.product.price;
+        const fontPath = path.join(
+          __dirname,
+          "..",
+          "fonts",
+          "Roboto-Regular.ttf"
+        ); // Đảm bảo đường dẫn đúng
         pdfDoc
+          .font(fontPath)
           .fontSize(14)
           .text(
-            prod.product.title +
-              " - " +
-              prod.quantity +
-              " x " +
-              "$" +
-              prod.product.price
+            `${prod.product.title} - ${prod.quantity} x $${prod.product.price}`
           );
       });
-      pdfDoc.text("---");
-      pdfDoc.fontSize(20).text("Total Price: $" + totalPrice);
+      pdfDoc.fontSize(26).text("-----------------------\n");
+      pdfDoc.fontSize(20).text("Total Price: $" + totalPrice + "\n \n");
+      pdfDoc.fontSize(10).text(`user: ${order.user.email}`);
+      const time = new Date(Date.now());
+      pdfDoc.text(`Order Date: ${time.toLocaleString()}`);
 
       pdfDoc.end();
     })

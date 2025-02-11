@@ -27,14 +27,14 @@ const Cart = () => {
         if (response.status === 401) throw new Error("Vui lòng đăng nhập!");
 
         const productArr = await response.json();
-        console.log(productArr);
+        // console.log(productArr);
 
         if (!productArr.products) {
           throw new Error("Dữ liệu giỏ hàng không hợp lệ!");
         }
 
         setCarts(productArr);
-        console.log(productArr);
+        // console.log(productArr);
       } catch (error) {
         // console.error("Lỗi:", error);
         setErrorMessage(error.message);
@@ -43,7 +43,7 @@ const Cart = () => {
 
     fetchCart();
   }, []); // Gọi lại khi có CSRF Token
-  console.log(carts);
+  // console.log(carts);
   // 🛠 Xử lý xóa sản phẩm
   const deleteItemHandler = async (productId) => {
     console.log(productId, "productId");
@@ -66,10 +66,10 @@ const Cart = () => {
       if (!response.ok) throw new Error("Lỗi khi xóa sản phẩm!");
 
       // ✅ Cập nhật state giỏ hàng
-      // setCarts((prevCarts) => ({
-      //   ...prevCarts,
-      //   products: prevCarts.products.filter((p) => p._id !== productId),
-      // }));
+      setCarts((prevCarts) => ({
+        ...prevCarts,
+        products: prevCarts.products.filter((p) => p._id !== productId),
+      }));
     } catch (error) {
       console.error(error);
       setErrorMessage("Không thể xóa sản phẩm!");
@@ -111,7 +111,7 @@ const Cart = () => {
               {carts.products.map((product) => (
                 <li key={product._id} className="cart__item">
                   <h1>{product.productId.title}</h1>
-                  {console.log(product._id, "product._id")}
+                  {/* {console.log(product._id, "product._id")} */}
                   <h2>Quantity: {product.quantity}</h2>
                   <button
                     className="btn danger"

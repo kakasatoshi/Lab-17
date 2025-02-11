@@ -69,15 +69,13 @@ const Orders = () => {
         <ul className="orders">
           {orders.map((order) => (
             <li className="orders__item" key={order._id}>
-              <h2>Order - #{order._id}</h2>
-              {/* <a href={`http://localhost:5000/shop/orders/${order._id}`}>
+              <h4>Order - #{order._id} </h4>{" "}
+              <a href={`http://localhost:5000/shop/orders/${order._id}`}>
                 Invoice
-              </a> */}
-
-              <button className="btn" onClick={() => handleSubmit(order._id)}>
+              </a>
+              {/* <button className="btn" onClick={() => handleSubmit(order._id)}>
                 Invoice
-              </button>
-
+              </button> */}
               <ul className="orders__products">
                 {order.products.map((p, index) => (
                   <li className="orders__products-item" key={index}>

@@ -49,14 +49,13 @@
 
 # }
 
-# post http://localhost:5000/shop/cartDeleteItem
-# Content-Type: application/json
-# CSRF-Token: 4b3BA0Hk-8DbRmNRZViyRF4ZbndU5EEbp_pM
+post http://localhost:5000/shop/cartDeleteItem
+Content-Type: application/json
+CSRF-Token: 4b3BA0Hk-8DbRmNRZViyRF4ZbndU5EEbp_pM
 
-# {
-#   "productId": "67a8a30687549e9ff040dccd"
-
-# }
+{
+  "productId": "67a8a30687549e9ff040dccd"
+}
 
 # http://localhost:5000/admin/products
 http://localhost:5000/images/
