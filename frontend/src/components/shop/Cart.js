@@ -10,6 +10,7 @@ const Cart = () => {
   const [carts, setCarts] = useState({ products: [] }); // Cấu trúc giỏ hàng { products: [...] }
   const [errorMessage, setErrorMessage] = useState("");
   const { csrfToken, errortoken } = useCsrfToken();
+  const [load, setLoad] = useState(false);
 
   // 🛠 Lấy CSRF Token khi component mount
 
@@ -61,15 +62,21 @@ const Cart = () => {
         }
       );
       const data = await response.json();
-      console.log(data, "data");
+      if (data) {
+        // window.location.reload();
+        // console.log(carts);
+        setCarts((prevCarts) => ({
+          ...prevCarts,
+          products: prevCarts.products.filter(
+            (p) => p.productId._id !== productId
+          ),
+        }));
+        // console.log(carts);
+      }
+
+      // setLoad(!load);
 
       if (!response.ok) throw new Error("Lỗi khi xóa sản phẩm!");
-
-      // ✅ Cập nhật state giỏ hàng
-      setCarts((prevCarts) => ({
-        ...prevCarts,
-        products: prevCarts.products.filter((p) => p._id !== productId),
-      }));
     } catch (error) {
       console.error(error);
       setErrorMessage("Không thể xóa sản phẩm!");
@@ -111,11 +118,12 @@ const Cart = () => {
               {carts.products.map((product) => (
                 <li key={product._id} className="cart__item">
                   <h1>{product.productId.title}</h1>
-                  {/* {console.log(product._id, "product._id")} */}
+
                   <h2>Quantity: {product.quantity}</h2>
+
                   <button
                     className="btn danger"
-                    onClick={() => deleteItemHandler(product._id)}
+                    onClick={() => deleteItemHandler(product.productId._id)}
                   >
                     Delete
                   </button>
